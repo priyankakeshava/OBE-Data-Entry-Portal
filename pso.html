@@ -57,7 +57,7 @@ function Steps({ list, current }) {
 
 function Sidebar({ active }) {
   const mainItems = [
-    {id:'dashboard',icon:'⊞',label:'Dashboard',href:'#'},
+    {id:'dashboard',icon:'⊞',label:'Dashboard',href:'index.html'},
     {id:'add-course',icon:'📚',label:'Add Course',href:'#'},
     {id:'add-co',icon:'🎯',label:'Add CO',href:'#'},
     {id:'add-po',icon:'📋',label:'Add PO',href:'#'},
@@ -153,9 +153,27 @@ function App() {
       date: `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`,
     };
     const updated = [...psos, newPso];
-    setPsosState(updated);
-    localStorage.setItem('obe_psos', JSON.stringify(updated));
-    setSaved(true);
+setPsosState(updated);
+
+localStorage.setItem('obe_psos', JSON.stringify(updated));
+
+let dashboardEntries =
+  JSON.parse(localStorage.getItem("obe_entries")) || [];
+
+dashboardEntries.push({
+  type: "PSO",
+  title: newPso.title,
+  context: newPso.program,
+  author: localStorage.getItem("currentUser") || "Faculty",
+  date: newPso.date
+});
+
+localStorage.setItem(
+  "obe_entries",
+  JSON.stringify(dashboardEntries)
+);
+
+setSaved(true);
     setTimeout(() => {
       setSaved(false); setStep(0);
       setForm({program:'',psoCode:'',title:'',description:'',bloom:''});

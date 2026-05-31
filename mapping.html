@@ -25,34 +25,70 @@
 <script type="text/babel">
 const { useState, useEffect, useRef } = React;
 
-const ALL_POS = [
-  {id:'PO1',short:'Engineering Knowledge'},{id:'PO2',short:'Problem Analysis'},
-  {id:'PO3',short:'Design/Development'},{id:'PO4',short:'Investigation'},
-  {id:'PO5',short:'Modern Tools'},{id:'PO6',short:'Engineer & Society'},
-];
-const COURSES = [
-  {id:'CS301',name:'Data Structures'},
-  {id:'CS302',name:'Algorithms'},
-  {id:'IT301',name:'Database Systems'},
-];
-const COS = {
-  CS301:[
-    {id:'CO1',title:'Understand data structure concepts'},
-    {id:'CO2',title:'Implement linear data structures'},
-    {id:'CO3',title:'Analyse tree and graph algorithms'},
-    {id:'CO4',title:'Apply sorting and searching techniques'},
-  ],
-  CS302:[
-    {id:'CO1',title:'Analyse algorithm complexity'},
-    {id:'CO2',title:'Apply divide-and-conquer strategies'},
-    {id:'CO3',title:'Solve dynamic programming problems'},
-  ],
-  IT301:[
-    {id:'CO1',title:'Design relational schemas'},
-    {id:'CO2',title:'Write complex SQL queries'},
-    {id:'CO3',title:'Implement transaction management'},
-  ],
+const loadEntries = () => {
+  try {
+    return JSON.parse(localStorage.getItem("obe_entries") || "[]");
+  } catch {
+    return [];
+  }
 };
+
+const buildUnique = (arr, keyFn) =>
+  [...new Map(arr.map(item => [keyFn(item), item])).values()];
+
+const savedEntries = loadEntries();
+
+const normalizeCourseKey = key => {
+  if (!key) return "";
+  const text = String(key).trim();
+  const match = text.match(/^([^\s:-]+)(?:\s*[-:]\s*(.*))?$/);
+  return match ? match[1] : text;
+};
+
+const COURSES = buildUnique(
+  savedEntries
+    .filter(e => e.type === "Course")
+    .map(e => ({
+      id: normalizeCourseKey(e.courseId || e.code || e.context || e.title),
+      name: e.title || String(e.context || e.code || e.title || "").replace(/^([^\s:-]+)\s*[-:]\s*/, "") || "Unnamed Course"
+    })),
+  x => x.id
+).filter(course => course.id);
+
+const ALL_POS = buildUnique(
+  savedEntries
+    .filter(e => e.type === "PO")
+    .map(e => ({
+      id: normalizeCourseKey(e.code || e.poCode || e.title || e.context),
+      short: e.title || e.short || e.context || e.code
+    })),
+  x => x.id
+);
+
+const ALL_PSOS = buildUnique(
+  savedEntries
+    .filter(e => e.type === "PSO")
+    .map(e => ({
+      id: normalizeCourseKey(e.code || e.psoCode || e.title || e.context),
+      short: e.title || e.short || e.context || e.code
+    })),
+  x => x.id
+);
+
+const CO_BY_COURSE = savedEntries
+  .filter(e => e.type === "CO")
+  .reduce((acc, e) => {
+    const courseKey = normalizeCourseKey(e.courseId || e.course || e.context || "");
+    if (!courseKey) return acc;
+
+    if (!acc[courseKey]) acc[courseKey] = [];
+    acc[courseKey].push({
+      id: e.code || e.coCode || (typeof e.title === "string" && e.title.split(":")[0].trim()) || `CO${acc[courseKey].length + 1}`,
+      title: e.title || e.statement || ""
+    });
+
+    return acc;
+  }, {});
 
 function cc(...a){ return a.filter(Boolean).join(' '); }
 
@@ -143,18 +179,22 @@ function TopBar({ title }) {
 }
 
 function App() {
-  const loadMapping = () => { try { return JSON.parse(localStorage.getItem('obe_mapping') || '{}'); } catch { return {}; } };
-  const loadPsos    = () => { try { return JSON.parse(localStorage.getItem('obe_psos')    || '[]'); } catch { return []; } };
+  const loadMapping = () => {
+    try {
+      return JSON.parse(localStorage.getItem("obe_mapping") || "{}");
+    } catch {
+      return {};
+    }
+  };
 
-  const [courseId,   setCourseId]  = useState('CS301');
-  const [tab,        setTab]       = useState('matrix');
-  const [mapping,    setMapping]   = useState(loadMapping);
-  const [psos]                     = useState(loadPsos);
-  const [flashSave,  setFlashSave] = useState(false);
+  const [courseId, setCourseId] = useState(COURSES[0]?.id || "");
+  const [tab, setTab] = useState("matrix");
+  const [mapping, setMapping] = useState(loadMapping);
+  const [flashSave, setFlashSave] = useState(false);
 
-  const cos     = COS[courseId] || [];
-  const visPOs  = ALL_POS;
-  const visPSOs = psos.slice(0, 3);
+  const cos = CO_BY_COURSE[courseId] || [];
+  const visPOs = ALL_POS;
+  const visPSOs = ALL_PSOS.slice(0, 3);
 
   function mkey(coId, tid) { return `${courseId}__${coId}__${tid}`; }
   function getV(coId, tid) { return mapping[mkey(coId, tid)] || '-'; }
