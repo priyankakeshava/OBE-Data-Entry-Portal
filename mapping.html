@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OBE Portal – CO-PO Mapping</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:#f1f5f9}
+  h1,h2,h3,h4{font-family:'Plus Jakarta Sans',sans-serif}
+  ::-webkit-scrollbar{width:4px;height:4px} ::-webkit-scrollbar-thumb{background:#475569;border-radius:4px}
+  .fade{animation:fadeUp .3s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .cell-btn{transition:transform .1s,background .15s} .cell-btn:active{transform:scale(.85)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const ALL_POS = [
+  {id:'PO1',short:'Engineering Knowledge'},{id:'PO2',short:'Problem Analysis'},
+  {id:'PO3',short:'Design/Development'},{id:'PO4',short:'Investigation'},
+  {id:'PO5',short:'Modern Tools'},{id:'PO6',short:'Engineer & Society'},
+];
+const COURSES = [
+  {id:'CS301',name:'Data Structures'},
+  {id:'CS302',name:'Algorithms'},
+  {id:'IT301',name:'Database Systems'},
+];
+const COS = {
+  CS301:[
+    {id:'CO1',title:'Understand data structure concepts'},
+    {id:'CO2',title:'Implement linear data structures'},
+    {id:'CO3',title:'Analyse tree and graph algorithms'},
+    {id:'CO4',title:'Apply sorting and searching techniques'},
+  ],
+  CS302:[
+    {id:'CO1',title:'Analyse algorithm complexity'},
+    {id:'CO2',title:'Apply divide-and-conquer strategies'},
+    {id:'CO3',title:'Solve dynamic programming problems'},
+  ],
+  IT301:[
+    {id:'CO1',title:'Design relational schemas'},
+    {id:'CO2',title:'Write complex SQL queries'},
+    {id:'CO3',title:'Implement transaction management'},
+  ],
+};
+
+function cc(...a){ return a.filter(Boolean).join(' '); }
+
+function BarChartCanvas({ data, labels }) {
+  const ref = useRef(null);
+  const inst = useRef(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    if (inst.current) { inst.current.destroy(); inst.current = null; }
+    inst.current = new Chart(ref.current, {
+      type:'bar',
+      data:{
+        labels,
+        datasets:[{
+          data,
+          backgroundColor: data.map(v => v>=2?'#059669':v>=1?'#D97706':'#e2e8f0'),
+          borderRadius:6, maxBarThickness:40,
+        }]
+      },
+      options:{
+        responsive:true,
+        plugins:{legend:{display:false}},
+        scales:{y:{max:3,min:0,ticks:{stepSize:1}},x:{grid:{display:false}}}
+      }
+    });
+    return () => { if(inst.current){ inst.current.destroy(); inst.current=null; } };
+  }, [JSON.stringify(data), JSON.stringify(labels)]);
+  return <canvas ref={ref} />;
+}
+
+function Sidebar({ active }) {
+  const mainItems = [
+    {id:'dashboard',icon:'⊞',label:'Dashboard'},
+    {id:'add-course',icon:'📚',label:'Add Course'},
+    {id:'add-co',icon:'🎯',label:'Add CO'},
+    {id:'add-po',icon:'📋',label:'Add PO'},
+    {id:'pso',    icon:'🔵',label:'Add PSO',        href:'pso.html'},
+    {id:'mapping',icon:'🔗',label:'CO-PO Mapping',  href:'mapping.html'},
+    {id:'review', icon:'✅',label:'Review & Submit', href:'review.html'},
+  ];
+ 
+  return (
+    <div className="w-64 min-h-screen flex flex-col shrink-0" style={{background:'#111827'}}>
+      <div className="px-5 py-5 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xs" style={{background:'#7C3AED'}}>OBE</div>
+          <span className="text-white font-bold text-lg" style={{fontFamily:'Plus Jakarta Sans'}}>OBE Portal</span>
+        </div>
+      </div>
+      <nav className="flex-1 px-3 py-4">
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest px-3 py-2">Main</p>
+        {mainItems.map(it => (
+  <a key={it.id} href={it.href}
+    className={cc('flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all no-underline',
+      active===it.id ? 'font-semibold text-white' : 'text-gray-400 hover:text-white hover:bg-white/10')}
+    style={active===it.id ? {background:'rgba(37,99,235,0.25)',borderLeft:'3px solid #60A5FA'} : {}}>
+    <span>{it.icon}</span><span>{it.label}</span>
+  </a>
+))}
+      </nav>
+      <div className="px-3 pb-4 border-t border-white/10 pt-3">
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest px-3 py-1.5">Settings</p>
+        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-900/20 transition-all text-left">
+          <span>🚪</span><span>Logout</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TopBar({ title }) {
+  return (
+    <div className="bg-white border-b border-gray-100 px-8 py-3 flex items-center justify-between sticky top-0 z-20">
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-gray-400">OBE Portal</span>
+        <span className="text-gray-300">›</span>
+        <span className="text-gray-900 font-semibold">{title}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{background:'#A01E25'}}>A</div>
+        <div className="text-right">
+          <p className="text-sm font-semibold text-gray-900 leading-tight">abcdd</p>
+          <p className="text-xs text-gray-500">Faculty</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const loadMapping = () => { try { return JSON.parse(localStorage.getItem('obe_mapping') || '{}'); } catch { return {}; } };
+  const loadPsos    = () => { try { return JSON.parse(localStorage.getItem('obe_psos')    || '[]'); } catch { return []; } };
+
+  const [courseId,   setCourseId]  = useState('CS301');
+  const [tab,        setTab]       = useState('matrix');
+  const [mapping,    setMapping]   = useState(loadMapping);
+  const [psos]                     = useState(loadPsos);
+  const [flashSave,  setFlashSave] = useState(false);
+
+  const cos     = COS[courseId] || [];
+  const visPOs  = ALL_POS;
+  const visPSOs = psos.slice(0, 3);
+
+  function mkey(coId, tid) { return `${courseId}__${coId}__${tid}`; }
+  function getV(coId, tid) { return mapping[mkey(coId, tid)] || '-'; }
+  function cycle(coId, tid) {
+    const next = {'-':'1','1':'2','2':'3','3':'-'}[getV(coId, tid)];
+    setMapping(p => {
+      const o = {...p, [mkey(coId, tid)]: next};
+      localStorage.setItem('obe_mapping', JSON.stringify(o));
+      return o;
+    });
+  }
+
+  function avgFor(tid) {
+    const nums = cos.map(co => getV(co.id, tid)).filter(v => v !== '-').map(Number);
+    return nums.length ? +(nums.reduce((a,b) => a+b, 0) / nums.length).toFixed(2) : 0;
+  }
+
+  const cellCls = {
+    '-':'bg-gray-100 text-gray-400 hover:bg-gray-200',
+    '1':'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+    '2':'bg-orange-100 text-orange-700 hover:bg-orange-200',
+    '3':'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
+  };
+
+  const barLabels = visPOs.map(p => p.id);
+  const barData   = visPOs.map(p => avgFor(p.id));
+  const psoLabels = visPSOs.map(p => p.code || '?');
+  const psoData   = visPSOs.map(p => avgFor(p.code || '?'));
+
+  function doSave() {
+    localStorage.setItem('obe_mapping', JSON.stringify(mapping));
+    setFlashSave(true);
+    setTimeout(() => setFlashSave(false), 2000);
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar active="mapping" />
+      <main className="flex-1 overflow-auto" style={{background:'#f1f5f9'}}>
+        <TopBar title="CO-PO Mapping" />
+        <div className="p-8 fade">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center text-white font-extrabold text-sm shadow-lg shadow-indigo-200">CM</div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">CO-PO Mapping</h1>
+                <p className="text-gray-500 text-sm mt-0.5">Map Course Outcomes to Program Outcomes and PSOs</p>
+              </div>
+            </div>
+            <div className="flex border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+              {[['matrix','⊞ Matrix'],['chart','📊 Charts']].map(([id,label]) => (
+                <button key={id} onClick={() => setTab(id)}
+                  className={cc('px-5 py-2.5 text-sm font-semibold transition-all',
+                    tab===id ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-50')}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Course pills */}
+          <div className="flex items-center gap-2 mb-6">
+            <span className="text-sm font-medium text-gray-700">Course:</span>
+            {COURSES.map(c => (
+              <button key={c.id} onClick={() => setCourseId(c.id)}
+                className={cc('px-3.5 py-1.5 rounded-xl text-sm font-semibold border transition-all',
+                  courseId===c.id ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400')}>
+                {c.id}: {c.name}
+              </button>
+            ))}
+          </div>
+
+          {/* ── MATRIX TAB ── */}
+          {tab === 'matrix' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden fade">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-gray-800">Correlation Matrix</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Click a cell to cycle:
+                    <strong className="text-yellow-600 mx-1">1</strong>Low ·
+                    <strong className="text-orange-600 mx-1">2</strong>Medium ·
+                    <strong className="text-emerald-600 mx-1">3</strong>High ·
+                    <strong className="text-gray-400 mx-1">—</strong>None
+                  </p>
+                </div>
+                <div className="flex gap-1.5">
+                  {[['—','bg-gray-100 text-gray-500'],['1','bg-yellow-100 text-yellow-700'],['2','bg-orange-100 text-orange-700'],['3','bg-emerald-100 text-emerald-700']].map(([l,c]) => (
+                    <span key={l} className={`w-7 h-7 rounded-lg text-xs font-bold inline-flex items-center justify-center ${c}`}>{l}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-center">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 min-w-52">Course Outcome</th>
+                      {visPOs.map(po => (
+                        <th key={po.id} className="px-2 py-3 min-w-12">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 inline-flex items-center justify-center font-extrabold text-xs">{po.id}</span>
+                          </div>
+                        </th>
+                      ))}
+                      {visPSOs.length > 0 && <th className="px-1"><div className="w-px bg-gray-200 h-8 mx-auto" /></th>}
+                      {visPSOs.map((pso, i) => (
+                        <th key={i} className="px-2 py-3 min-w-12">
+                          <span className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 inline-flex items-center justify-center font-extrabold text-xs">{pso.code}</span>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {cos.map((co, ri) => (
+                      <tr key={co.id} style={ri%2!==0?{background:'#fafafa'}:{}}>
+                        <td className="px-4 py-3 text-left">
+                          <div className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 inline-flex items-center justify-center font-extrabold text-xs shrink-0">{co.id}</span>
+                            <span className="text-xs text-gray-600">{co.title}</span>
+                          </div>
+                        </td>
+                        {visPOs.map(po => {
+                          const v = getV(co.id, po.id);
+                          return (
+                            <td key={po.id} className="px-2 py-3">
+                              <button onClick={() => cycle(co.id, po.id)}
+                                className={`cell-btn w-9 h-9 rounded-xl text-xs font-bold ${cellCls[v]}`}>{v}</button>
+                            </td>
+                          );
+                        })}
+                        {visPSOs.length > 0 && <td className="px-1"><div className="w-px bg-gray-200 h-5 mx-auto" /></td>}
+                        {visPSOs.map(pso => {
+                          const v = getV(co.id, pso.code);
+                          return (
+                            <td key={pso.code} className="px-2 py-3">
+                              <button onClick={() => cycle(co.id, pso.code)}
+                                className={`cell-btn w-9 h-9 rounded-xl text-xs font-bold ${cellCls[v]}`}>{v}</button>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                    {/* Average row */}
+                    <tr style={{background:'#f8fafc',borderTop:'2px solid #e2e8f0'}}>
+                      <td className="px-4 py-2.5 text-xs font-bold text-gray-700 text-left">Average</td>
+                      {visPOs.map(po => {
+                        const a = avgFor(po.id);
+                        return (
+                          <td key={po.id} className="px-2 py-2.5">
+                            <span className={cc('text-xs font-extrabold', a>=2.5?'text-emerald-600':a>=1.5?'text-orange-600':a>0?'text-yellow-600':'text-gray-400')}>
+                              {a > 0 ? a : '—'}
+                            </span>
+                          </td>
+                        );
+                      })}
+                      {visPSOs.length > 0 && <td />}
+                      {visPSOs.map(pso => {
+                        const a = avgFor(pso.code);
+                        return <td key={pso.code} className="px-2 py-2.5"><span className="text-xs font-extrabold text-gray-500">{a>0?a:'—'}</span></td>;
+                      })}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                <p className="text-xs text-gray-400">Cells auto-save to browser. Click to also persist manually.</p>
+                <div className="flex gap-3">
+                  <button onClick={doSave}
+                    className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                    style={{background: flashSave ? '#059669' : '#A01E25'}}>
+                    {flashSave ? '✓ Saved!' : '💾 Save Mapping'}
+                  </button>
+                  <a href="review.html" className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white no-underline hover:opacity-90 transition-all" style={{background:'#1d4ed8'}}>
+                    Review & Submit →
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── CHARTS TAB ── */}
+          {tab === 'chart' && (
+            <div className="grid grid-cols-2 gap-6 fade">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="font-semibold text-gray-800 mb-1">Average Correlation per PO</h3>
+                <p className="text-xs text-gray-400 mb-4">Average of all CO correlations for each Program Outcome</p>
+                <BarChartCanvas key={'po-'+courseId+JSON.stringify(mapping)} data={barData} labels={barLabels} />
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="font-semibold text-gray-800 mb-1">
+                  {visPSOs.length > 0 ? 'Average Correlation per PSO' : 'No PSOs Added Yet'}
+                </h3>
+                <p className="text-xs text-gray-400 mb-4">
+                  {visPSOs.length > 0 ? 'Average of all CO correlations for each PSO' : 'Go to Add PSO page to add Program Specific Outcomes'}
+                </p>
+                {visPSOs.length > 0
+                  ? <BarChartCanvas key={'pso-'+courseId+JSON.stringify(mapping)} data={psoData} labels={psoLabels} />
+                  : (
+                    <div className="h-48 flex items-center justify-center text-center text-gray-400">
+                      <div>
+                        <span className="text-4xl block mb-2">🔵</span>
+                        <p className="text-sm">No PSOs yet</p>
+                        <a href="pso.html" className="text-xs text-blue-500 underline mt-1 block">← Add PSOs first</a>
+                      </div>
+                    </div>
+                  )
+                }
+              </div>
+
+              {/* Per-CO cards */}
+              <div className="col-span-2 grid grid-cols-4 gap-4">
+                {cos.map(co => {
+                  const mapped   = visPOs.filter(po => getV(co.id, po.id) !== '-').length;
+                  const highCorr = visPOs.filter(po => getV(co.id, po.id) === '3').length;
+                  const pct      = Math.round((mapped / visPOs.length) * 100);
+                  return (
+                    <div key={co.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 inline-flex items-center justify-center text-xs font-bold shrink-0">{co.id}</span>
+                        <span className="text-xs font-semibold text-gray-700 leading-snug">{co.title}</span>
+                      </div>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between"><span className="text-gray-500">POs mapped</span><span className="font-bold text-gray-900">{mapped}/{visPOs.length}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">High (3)</span><span className="font-bold text-emerald-600">{highCorr}</span></div>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 rounded-full mt-2 overflow-hidden">
+                        <div className="h-full bg-orange-400 rounded-full" style={{width:`${pct}%`, transition:'width .6s ease'}} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

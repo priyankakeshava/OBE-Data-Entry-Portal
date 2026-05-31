@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OBE Portal – Add PSO</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:#f1f5f9}
+  h1,h2,h3,h4{font-family:'Plus Jakarta Sans',sans-serif}
+  ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:#475569;border-radius:4px}
+  .fade{animation:fadeUp .3s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const PROGRAMS = [
+  { id:'cs', name:'B.Tech – Computer Science',       code:'CS', dept:'Computer Engineering' },
+  { id:'it', name:'B.Tech – Information Technology', code:'IT', dept:'Information Technology' },
+  { id:'ec', name:'B.Tech – Electronics & Telecom',  code:'EC', dept:'Electronics' },
+];
+const BLOOM = ['Remember','Understand','Apply','Analyse','Evaluate','Create'];
+
+function cc(...args){ return args.filter(Boolean).join(' '); }
+
+function Steps({ list, current }) {
+  return (
+    <div className="flex items-center gap-1 mb-8">
+      {list.map((label, i) => (
+        <React.Fragment key={i}>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className={cc('w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all',
+              i < current ? 'bg-emerald-500 text-white' : i === current ? 'text-white' : 'bg-gray-200 text-gray-500')}
+              style={i === current ? {background:'#A01E25'} : {}}>
+              {i < current ? '✓' : i + 1}
+            </div>
+            <span className={cc('text-xs font-semibold whitespace-nowrap',
+              i === current ? 'text-red-800' : i < current ? 'text-emerald-600' : 'text-gray-400')}>
+              {label}
+            </span>
+          </div>
+          {i < list.length - 1 && <div className={cc('flex-1 h-0.5 min-w-5', i < current ? 'bg-emerald-400' : 'bg-gray-200')} />}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function Sidebar({ active }) {
+  const mainItems = [
+    {id:'dashboard',icon:'⊞',label:'Dashboard',href:'#'},
+    {id:'add-course',icon:'📚',label:'Add Course',href:'#'},
+    {id:'add-co',icon:'🎯',label:'Add CO',href:'#'},
+    {id:'add-po',icon:'📋',label:'Add PO',href:'#'},
+    {id:'pso',    icon:'🔵',label:'Add PSO',        href:'pso.html'},
+    {id:'mapping',icon:'🔗',label:'CO-PO Mapping',  href:'mapping.html'},
+    {id:'review', icon:'✅',label:'Review & Submit', href:'review.html'},
+  ];
+  
+  return (
+    <div className="w-64 min-h-screen flex flex-col shrink-0" style={{background:'#111827'}}>
+      <div className="px-5 py-5 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xs" style={{background:'#7C3AED'}}>OBE</div>
+          <span className="text-white font-bold text-lg" style={{fontFamily:'Plus Jakarta Sans'}}>OBE Portal</span>
+        </div>
+      </div>
+      <nav className="flex-1 px-3 py-4">
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest px-3 py-2">Main</p>
+        {mainItems.map(it => (
+  <a key={it.id} href={it.href}
+    className={cc('flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all no-underline',
+      active===it.id ? 'font-semibold text-white' : 'text-gray-400 hover:text-white hover:bg-white/10')}
+    style={active===it.id ? {background:'rgba(37,99,235,0.25)',borderLeft:'3px solid #60A5FA'} : {}}>
+    <span>{it.icon}</span><span>{it.label}</span>
+  </a>
+))}
+        
+      </nav>
+      <div className="px-3 pb-4 border-t border-white/10 pt-3">
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest px-3 py-1.5">Settings</p>
+        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-900/20 transition-all text-left">
+          <span>🚪</span><span>Logout</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TopBar({ title }) {
+  return (
+    <div className="bg-white border-b border-gray-100 px-8 py-3 flex items-center justify-between sticky top-0 z-20">
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-gray-400">OBE Portal</span>
+        <span className="text-gray-300">›</span>
+        <span className="text-gray-900 font-semibold">{title}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{background:'#A01E25'}}>A</div>
+        <div className="text-right">
+          <p className="text-sm font-semibold text-gray-900 leading-tight">abcdd</p>
+          <p className="text-xs text-gray-500">Faculty</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const loadPsos = () => { try { return JSON.parse(localStorage.getItem('obe_psos') || '[]'); } catch { return []; } };
+  const [step, setStep]     = useState(0);
+  const [form, setForm]     = useState({program:'',psoCode:'',title:'',description:'',bloom:''});
+  const [errors, setErrors] = useState({});
+  const [psos, setPsosState] = useState(loadPsos);
+  const [saved, setSaved]   = useState(false);
+
+  function upd(k, v) {
+    setForm(p => ({...p, [k]: v}));
+    setErrors(p => ({...p, [k]: ''}));
+  }
+
+  function validate(s) {
+    const e = {};
+    if (s === 0 && !form.program)            e.program     = 'Please select a program';
+    if (s === 1 && !form.psoCode.trim())     e.psoCode     = 'PSO code is required (e.g. PSO1)';
+    if (s === 1 && !form.title.trim())       e.title       = 'Title is required';
+    if (s === 1 && !form.description.trim()) e.description = 'Description is required';
+    if (s === 1 && !form.bloom)              e.bloom       = "Select Bloom's level";
+    return e;
+  }
+
+  function handleNext() {
+    const e = validate(step);
+    if (Object.keys(e).length) { setErrors(e); return; }
+    setErrors({});
+    if (step < 2) { setStep(s => s + 1); return; }
+    const prog = PROGRAMS.find(p => p.id === form.program);
+    const now  = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const newPso = {
+      id: Date.now(), code: form.psoCode, title: form.title,
+      description: form.description, bloom: form.bloom,
+      program: prog ? prog.name : form.program,
+      date: `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`,
+    };
+    const updated = [...psos, newPso];
+    setPsosState(updated);
+    localStorage.setItem('obe_psos', JSON.stringify(updated));
+    setSaved(true);
+    setTimeout(() => {
+      setSaved(false); setStep(0);
+      setForm({program:'',psoCode:'',title:'',description:'',bloom:''});
+    }, 2500);
+  }
+
+  const prog = PROGRAMS.find(p => p.id === form.program);
+  const fCls = k => cc('w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 transition',
+    errors[k] ? 'border-red-400 bg-red-50' : 'border-gray-200');
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar active="pso" />
+      <main className="flex-1 overflow-auto" style={{background:'#f1f5f9'}}>
+        <TopBar title="Program Specific Outcomes" />
+        <div className="p-8 fade">
+          {/* Header */}
+          <div className="mb-7">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center text-white font-extrabold text-sm shadow-lg shadow-blue-200">PS</div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Program Specific Outcomes</h1>
+                <p className="text-gray-500 text-sm mt-0.5">Define PSOs that graduates of each program should achieve</p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-3 bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
+                <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center text-white text-xs font-bold">PS</div>
+                <div><p className="text-xs text-gray-500">Total PSOs</p><p className="text-2xl font-bold text-gray-900">{psos.length}</p></div>
+              </div>
+              <div className="flex items-center gap-3 bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
+                <div className="w-9 h-9 rounded-xl bg-purple-500 flex items-center justify-center text-white text-xs font-bold">PR</div>
+                <div><p className="text-xs text-gray-500">Programs</p><p className="text-2xl font-bold text-gray-900">{PROGRAMS.length}</p></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-6">
+            {/* Form */}
+            <div className="col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-7">
+              <Steps list={['Select Program', 'PSO Details', 'Review & Save']} current={step} />
+
+              {saved ? (
+                <div className="text-center py-14 fade">
+                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">✅</div>
+                  <h3 className="text-xl font-bold text-emerald-700 mb-1">PSO Saved Successfully!</h3>
+                  <p className="text-gray-500 text-sm">Your PSO has been added to the system.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Step 0 */}
+                  {step === 0 && (
+                    <div className="space-y-5 fade">
+                      <h3 className="font-semibold text-gray-800">Select Program</h3>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-1.5 block">Program <span className="text-red-500">*</span></label>
+                        <select value={form.program} onChange={e => upd('program', e.target.value)} className={fCls('program')}>
+                          <option value="">— Select a Program —</option>
+                          {PROGRAMS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                        {errors.program && <p className="text-red-500 text-xs mt-1">{errors.program}</p>}
+                      </div>
+                      {prog && (
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-1.5">
+                          <p className="text-sm"><span className="text-gray-500 w-28 inline-block">Code</span><span className="font-semibold text-gray-900">{prog.code}</span></p>
+                          <p className="text-sm"><span className="text-gray-500 w-28 inline-block">Department</span><span className="font-semibold text-gray-900">{prog.dept}</span></p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Step 1 */}
+                  {step === 1 && (
+                    <div className="space-y-5 fade">
+                      <h3 className="font-semibold text-gray-800">PSO Details</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-1.5 block">PSO Code <span className="text-red-500">*</span></label>
+                          <input value={form.psoCode} onChange={e => upd('psoCode', e.target.value)} placeholder="e.g. PSO1" className={fCls('psoCode')} />
+                          {errors.psoCode && <p className="text-red-500 text-xs mt-1">{errors.psoCode}</p>}
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-1.5 block">Bloom's Level <span className="text-red-500">*</span></label>
+                          <select value={form.bloom} onChange={e => upd('bloom', e.target.value)} className={fCls('bloom')}>
+                            <option value="">— Select —</option>
+                            {BLOOM.map(b => <option key={b} value={b}>{b}</option>)}
+                          </select>
+                          {errors.bloom && <p className="text-red-500 text-xs mt-1">{errors.bloom}</p>}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-1.5 block">PSO Title <span className="text-red-500">*</span></label>
+                        <input value={form.title} onChange={e => upd('title', e.target.value)}
+                          placeholder="e.g. Apply domain-specific technical knowledge to solve real-world problems"
+                          className={fCls('title')} />
+                        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-1.5 block">Description <span className="text-red-500">*</span></label>
+                        <textarea value={form.description} onChange={e => upd('description', e.target.value)} rows={4}
+                          placeholder="Describe what students will demonstrate upon graduation…"
+                          className={cc(fCls('description'), 'resize-none')} />
+                        {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 2 */}
+                  {step === 2 && (
+                    <div className="space-y-4 fade">
+                      <h3 className="font-semibold text-gray-800">Review Before Saving</h3>
+                      <div className="bg-gray-50 border border-gray-200 rounded-xl divide-y divide-gray-100 overflow-hidden">
+                        {[['Program', prog?.name], ['PSO Code', form.psoCode], ["Bloom's Level", form.bloom], ['Title', form.title], ['Description', form.description]].map(([k,v]) => (
+                          <div key={k} className="flex gap-4 px-4 py-3">
+                            <span className="text-sm text-gray-500 w-32 shrink-0">{k}</span>
+                            <span className="text-sm font-medium text-gray-900">{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+                        <span>⚠️</span><span>Review carefully. Click <strong>Save PSO</strong> to confirm.</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between mt-8">
+                    {step > 0
+                      ? <button onClick={() => setStep(s => s - 1)} className="px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">← Back</button>
+                      : <div />}
+                    <button onClick={handleNext}
+                      className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 active:scale-95 transition-all"
+                      style={{background:'#A01E25'}}>
+                      {step === 2 ? '💾 Save PSO' : 'Next →'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* PSO List */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h3 className="font-semibold text-gray-800 mb-4">Existing PSOs <span className="text-xs text-gray-400 font-normal">({psos.length})</span></h3>
+              {psos.length === 0 ? (
+                <div className="text-center py-10 text-gray-400">
+                  <span className="text-4xl block mb-2">📭</span>
+                  <p className="text-sm">No PSOs added yet</p>
+                  <p className="text-xs mt-1 text-gray-300">Fill the form to add one</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {psos.map(pso => (
+                    <div key={pso.id} className="border border-gray-100 rounded-xl p-3 hover:border-blue-200 hover:bg-blue-50/40 transition-all">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 text-xs font-extrabold flex items-center justify-center">{pso.code}</span>
+                        <p className="text-sm font-semibold text-gray-900 leading-snug">{pso.title}</p>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{pso.description}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-full font-semibold">{pso.bloom}</span>
+                        <span className="text-xs text-gray-400">{pso.date}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {psos.length > 0 && (
+                <a href="mapping.html" className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white no-underline hover:opacity-90 transition-all" style={{background:'#A01E25'}}>
+                  Go to CO-PO Mapping →
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
