@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OBE Portal - Add CO</title>
+  <style>
+    :root { --primary: #4f46e5; --primary-dark: #4338ca; --bg: #f4f7fb; --card: #ffffff; --border: #dbe3f0; --text: #1f2937; --muted: #6b7280; --danger: #dc2626; --success: #16a34a; }
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    .header { margin-bottom: 24px; }
+    .header h1 { margin: 0; font-size: 32px; color: #111827; }
+    .header p { margin-top: 8px; color: var(--muted); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05); }
+    
+    .steps { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .step { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+    .step .circle { width: 32px; height: 32px; border-radius: 50%; background: #e5e7eb; display: grid; place-items: center; font-weight: bold; }
+    .step.active { color: var(--primary-dark); font-weight: bold; }
+    .step.active .circle { background: var(--primary); color: white; }
+    .step.completed .circle { background: var(--success); color: white; }
+    
+    .step-section { display: none; }
+    .step-section.active { display: block; }
+    
+    .form-container { display: grid; gap: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .full { grid-column: 1 / -1; }
+    label { font-size: 14px; font-weight: 600; }
+    input, select, textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); outline: none; font-size: 14px; transition: 0.2s; }
+    textarea { min-height: 100px; resize: vertical; }
+    .error { display: none; font-size: 12px; color: var(--danger); }
+    .error.show { display: block; }
+    .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+    button { border: none; border-radius: 10px; padding: 12px 18px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .btn-secondary { background: #e5e7eb; color: #111827; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-dashboard { background: #111827; color: white; text-decoration: none; display: inline-block; padding: 12px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; margin-bottom: 20px;}
+    .review-box { background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid var(--border); }
+    .review-box p { margin: 0 0 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="btn-dashboard">← Back to Dashboard</a>
+    
+    <div class="header">
+      <h1>Course Outcome (CO) Entry</h1>
+    </div>
+
+    <div class="card">
+      <div class="steps">
+        <div class="step active" id="indicator-1"><div class="circle">1</div> Details</div>
+        <div class="step" id="indicator-2"><div class="circle">2</div> Bloom's</div>
+        <div class="step" id="indicator-3"><div class="circle">3</div> Review</div>
+      </div>
+
+      <div class="form-container" id="coForm">
+        
+        <!-- STEP 1 -->
+        <div class="step-section active" id="section-1">
+          <div class="grid">
+            <div class="field">
+              <label>Course *</label>
+              <!-- Removed fake courses, left only the default option -->
+              <select id="course">
+                <option value="">Select Course</option>
+              </select>
+              <div class="error" id="courseError">Please select a course.</div>
+            </div>
+            <div class="field">
+              <label>CO Code *</label>
+              <input type="text" id="coCode" placeholder="CO1" />
+              <div class="error" id="coCodeError">Enter valid CO code.</div>
+            </div>
+            <div class="field full">
+              <label>CO Statement *</label>
+              <textarea id="coStatement"></textarea>
+              <div class="error" id="coStatementError">CO statement required.</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn-primary" onclick="goToStep(2)">Next Step</button>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-section" id="section-2">
+          <div class="grid">
+            <div class="field">
+              <label>Bloom's Taxonomy Level *</label>
+              <select id="blooms">
+                <option value="">Select Level</option>
+                <option>Remember</option>
+                <option>Understand</option>
+                <option>Apply</option>
+                <option>Analyze</option>
+                <option>Evaluate</option>
+                <option>Create</option>
+              </select>
+              <div class="error" id="bloomsError">Please select Bloom's level.</div>
+            </div>
+            <div class="field">
+              <label>CO Number *</label>
+              <input type="number" id="coNumber" min="1" max="20" />
+              <div class="error" id="coNumberError">Required.</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn-secondary" onclick="goToStep(1)">Back</button>
+            <button type="button" class="btn-primary" onclick="goToStep(3)">Review</button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-section" id="section-3">
+          <div class="review-box" id="reviewContent"></div>
+          <div class="actions">
+            <button type="button" class="btn-secondary" onclick="goToStep(2)">Back</button>
+            <button type="button" class="btn-success" onclick="submitCO()">Save CO</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const currentUser = localStorage.getItem("currentUser") || "Unknown Faculty";
+    if (!localStorage.getItem("currentUser")) window.location.href = "login.html";
+
+    // --- NEW FEATURE: Load dynamic courses into dropdown ---
+    function loadCoursesDropdown() {
+      const courseDropdown = document.getElementById("course");
+      let entries = JSON.parse(localStorage.getItem("obe_entries")) || [];
+      
+      // Filter out only the entries that are "Courses"
+      let courses = entries.filter(e => e.type === "Course");
+      
+      if (courses.length > 0) {
+        courses.forEach(course => {
+          let option = document.createElement("option");
+          // Combine Course Code and Name (e.g. "CS301 - Data Structures")
+          let courseLabel = course.context + " - " + course.title;
+          option.value = courseLabel;
+          option.textContent = courseLabel;
+          courseDropdown.appendChild(option);
+        });
+      } else {
+        // If no courses exist yet, tell the user
+        let emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "No courses found. Add a course first!";
+        emptyOption.disabled = true;
+        courseDropdown.appendChild(emptyOption);
+      }
+    }
+    
+    // Run it as soon as the page loads
+    loadCoursesDropdown();
+    // --------------------------------------------------------
+
+    function showError(id, show) { document.getElementById(id).classList.toggle("show", show); }
+
+    function validateStep1() {
+      let valid = true;
+      const c = document.getElementById("course").value;
+      const cc = document.getElementById("coCode").value;
+      const st = document.getElementById("coStatement").value;
+      showError("courseError", !c); if(!c) valid = false;
+      showError("coCodeError", !/^CO[1-9][0-9]*$/.test(cc.toUpperCase())); if(!/^CO[1-9][0-9]*$/.test(cc.toUpperCase())) valid = false;
+      showError("coStatementError", !st); if(!st) valid = false;
+      return valid;
+    }
+
+    function validateStep2() {
+      let valid = true;
+      const b = document.getElementById("blooms").value;
+      const n = document.getElementById("coNumber").value;
+      showError("bloomsError", !b); if(!b) valid = false;
+      showError("coNumberError", !n); if(!n) valid = false;
+      return valid;
+    }
+
+    function goToStep(step) {
+      if(step === 2 && !validateStep1()) return;
+      if(step === 3 && !validateStep2()) return;
+
+      document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+      document.getElementById(`section-${step}`).classList.add('active');
+
+      document.querySelectorAll('.step').forEach((el, index) => {
+        el.classList.remove('active');
+        if (index < step - 1) el.classList.add('completed');
+        else el.classList.remove('completed');
+      });
+      document.getElementById(`indicator-${step}`).classList.add('active');
+
+      if(step === 3) {
+        document.getElementById("reviewContent").innerHTML = `
+          <p><strong>Course:</strong> ${document.getElementById("course").value}</p>
+          <p><strong>Code:</strong> ${document.getElementById("coCode").value.toUpperCase()}</p>
+          <p><strong>Statement:</strong> ${document.getElementById("coStatement").value}</p>
+        `;
+      }
+    }
+
+    function submitCO() {
+      let entries = JSON.parse(localStorage.getItem("obe_entries")) || [];
+      
+      let coCode = document.getElementById("coCode").value.toUpperCase();
+      let statement = document.getElementById("coStatement").value;
+      
+      let shortTitle = coCode + ": " + (statement.length > 20 ? statement.substring(0, 20) + "..." : statement);
+
+      entries.push({
+        type: "CO",
+        title: shortTitle,
+        context: document.getElementById("course").value,
+        author: currentUser,
+        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      });
+      
+      localStorage.setItem("obe_entries", JSON.stringify(entries));
+      alert("CO Successfully Saved!");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

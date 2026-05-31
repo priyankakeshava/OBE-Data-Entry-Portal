@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OBE Portal - Add PO</title>
+  <style>
+    :root { --primary: #4f46e5; --primary-dark: #4338ca; --bg: #f4f7fb; --card: #ffffff; --border: #dbe3f0; --text: #1f2937; --muted: #6b7280; --danger: #dc2626; --success: #16a34a; }
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    .header { margin-bottom: 24px; }
+    .header h1 { margin: 0; font-size: 32px; color: #111827; }
+    .header p { margin-top: 8px; color: var(--muted); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05); }
+    
+    /* Step Navigation Styling */
+    .steps { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .step { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+    .step .circle { width: 32px; height: 32px; border-radius: 50%; background: #e5e7eb; display: grid; place-items: center; font-weight: bold; }
+    .step.active { color: var(--primary-dark); font-weight: bold; }
+    .step.active .circle { background: var(--primary); color: white; }
+    .step.completed .circle { background: var(--success); color: white; }
+    
+    /* Section Hiding/Showing */
+    .step-section { display: none; }
+    .step-section.active { display: block; }
+    
+    form { display: grid; gap: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .full { grid-column: 1 / -1; }
+    label { font-size: 14px; font-weight: 600; }
+    input, select, textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); outline: none; font-size: 14px; transition: 0.2s; }
+    textarea { min-height: 140px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+    
+    .error { display: none; font-size: 12px; color: var(--danger); }
+    .error.show { display: block; }
+    
+    .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+    button { border: none; border-radius: 10px; padding: 12px 18px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .btn-secondary { background: #e5e7eb; color: #111827; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-dashboard { background: #111827; color: white; text-decoration: none; display: inline-block; padding: 12px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; margin-bottom: 20px;}
+    
+    .review-box { background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid var(--border); }
+    .review-box p { margin: 0 0 10px; }
+    .placeholder-box { text-align: center; padding: 40px; background: #f9fafb; border-radius: 10px; border: 1px dashed var(--border); color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="btn-dashboard">← Back to Dashboard</a>
+
+    <div class="header">
+      <h1>Program Outcome (PO) Entry</h1>
+      <p>Add and manage Program Outcomes for OBE accreditation.</p>
+    </div>
+
+    <div class="card">
+      <div class="steps">
+        <div class="step active" id="indicator-1"><div class="circle">1</div> PO Details</div>
+        <div class="step" id="indicator-2"><div class="circle">2</div> Graduate Attribute</div>
+        <div class="step" id="indicator-3"><div class="circle">3</div> Mapping</div>
+        <div class="step" id="indicator-4"><div class="circle">4</div> Review</div>
+      </div>
+
+      <form id="poForm">
+        
+        <div class="step-section active" id="section-1">
+          <div class="grid">
+            <div class="field">
+              <label for="program">Program *</label>
+              <select id="program" required>
+                <option value="">Select Program</option>
+                <option>B.Tech - Computer Science Engineering</option>
+                <option>B.Tech - Information Technology</option>
+                <option>B.Tech - Electronics Engineering</option>
+              </select>
+              <div class="error" id="programError">Please select a program.</div>
+            </div>
+            <div class="field">
+              <label for="poCode">PO Code *</label>
+              <input type="text" id="poCode" placeholder="PO1" maxlength="5" required />
+              <div class="error" id="poCodeError">Enter valid PO code (PO1-PO12).</div>
+            </div>
+            <div class="field full">
+              <label for="poStatement">PO Statement *</label>
+              <textarea id="poStatement" placeholder="Enter Program Outcome statement..." required></textarea>
+              <div class="error" id="poStatementError">PO statement is required.</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn-primary" onclick="goToStep(2)">Next Step</button>
+          </div>
+        </div>
+
+        <div class="step-section" id="section-2">
+          <div class="grid">
+            <div class="field">
+              <label for="graduateAttribute">Graduate Attribute *</label>
+              <select id="graduateAttribute" required>
+                <option value="">Select Attribute</option>
+                <option>Engineering Knowledge</option>
+                <option>Problem Analysis</option>
+                <option>Design / Development</option>
+                <option>Investigation</option>
+                <option>Modern Tool Usage</option>
+                <option>Engineer & Society</option>
+                <option>Environment & Sustainability</option>
+                <option>Ethics</option>
+                <option>Individual & Team Work</option>
+                <option>Communication</option>
+                <option>Project Management</option>
+                <option>Lifelong Learning</option>
+              </select>
+              <div class="error" id="graduateAttributeError">Please select graduate attribute.</div>
+            </div>
+            <div class="field">
+              <label for="poNumber">PO Number *</label>
+              <input type="number" id="poNumber" min="1" max="12" placeholder="1" required />
+              <div class="error" id="poNumberError">Enter valid PO number.</div>
+            </div>
+            <div class="field full">
+              <label for="remarks">Remarks</label>
+              <textarea id="remarks" placeholder="Optional remarks..."></textarea>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn-secondary" onclick="goToStep(1)">Back</button>
+            <button type="button" class="btn-primary" onclick="goToStep(3)">Next Step</button>
+          </div>
+        </div>
+
+        <div class="step-section" id="section-3">
+          <div class="placeholder-box">
+            <h3>Mapping Configuration</h3>
+            <p>PO Mapping matrix will be configured automatically after creation.</p>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn-secondary" onclick="goToStep(2)">Back</button>
+            <button type="button" class="btn-primary" onclick="goToStep(4)">Review Details</button>
+          </div>
+        </div>
+
+        <div class="step-section" id="section-4">
+          <div class="review-box" id="reviewContent">
+            </div>
+          <div class="actions">
+            <button type="button" class="btn-secondary" onclick="goToStep(3)">Back</button>
+            <button type="button" class="btn-success" onclick="submitPO()">Confirm & Save PO</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Ensure user is logged in
+    const currentUser = localStorage.getItem("currentUser") || "Unknown Faculty";
+    if (!localStorage.getItem("currentUser")) window.location.href = "login.html";
+
+    function showError(id, show) {
+      document.getElementById(id).classList.toggle("show", show);
+    }
+
+    // Validation for Step 1
+    function validateStep1() {
+      let valid = true;
+      const prog = document.getElementById("program").value;
+      const code = document.getElementById("poCode").value;
+      const stmt = document.getElementById("poStatement").value.trim();
+      
+      showError("programError", !prog); if(!prog) valid = false;
+      showError("poCodeError", !/^PO([1-9]|1[0-2])$/.test(code.toUpperCase())); if(!/^PO([1-9]|1[0-2])$/.test(code.toUpperCase())) valid = false;
+      showError("poStatementError", !stmt); if(!stmt) valid = false;
+      
+      return valid;
+    }
+
+    // Validation for Step 2
+    function validateStep2() {
+      let valid = true;
+      const attr = document.getElementById("graduateAttribute").value;
+      const num = document.getElementById("poNumber").value;
+      
+      showError("graduateAttributeError", !attr); if(!attr) valid = false;
+      showError("poNumberError", !num || num <= 0); if(!num || num <= 0) valid = false;
+      
+      return valid;
+    }
+
+    // Move between steps
+    function goToStep(step) {
+      // Validate before moving forward
+      if (step === 2 && !validateStep1()) return;
+      if (step === 3 && !validateStep2()) return;
+
+      // Hide all sections, show current
+      document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+      document.getElementById(`section-${step}`).classList.add('active');
+
+      // Update Top Nav UI
+      document.querySelectorAll('.step').forEach((el, index) => {
+        el.classList.remove('active');
+        if (index < step - 1) el.classList.add('completed');
+        else el.classList.remove('completed');
+      });
+      document.getElementById(`indicator-${step}`).classList.add('active');
+
+      // Populate Review Screen when hitting Step 4
+      if (step === 4) {
+        document.getElementById("reviewContent").innerHTML = `
+          <p><strong>Code:</strong> ${document.getElementById("poCode").value.toUpperCase()}</p>
+          <p><strong>Program:</strong> ${document.getElementById("program").value}</p>
+          <p><strong>Attribute:</strong> ${document.getElementById("graduateAttribute").value}</p>
+          <p><strong>Statement:</strong> ${document.getElementById("poStatement").value}</p>
+        `;
+      }
+    }
+
+    // Final Save Function (Bypasses hidden required fields issue)
+    function submitPO() {
+      let entries = JSON.parse(localStorage.getItem("obe_entries")) || [];
+      
+      let poCode = document.getElementById("poCode").value.toUpperCase();
+      let statement = document.getElementById("poStatement").value;
+      
+      // Keep title short so it looks clean on the dashboard table
+      let shortTitle = poCode + ": " + (statement.length > 20 ? statement.substring(0, 20) + "..." : statement);
+
+      entries.push({
+        type: "PO",
+        title: shortTitle,
+        context: document.getElementById("program").value,
+        author: currentUser,
+        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      });
+      
+      localStorage.setItem("obe_entries", JSON.stringify(entries));
+      
+      alert("PO Successfully Saved!");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

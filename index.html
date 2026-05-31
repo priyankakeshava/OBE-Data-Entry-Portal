@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OBE Data Entry Portal - Dashboard</title>
+  <style>
+    :root {
+      --primary: #4f46e5; --primary-dark: #4338ca; --secondary: #0f172a; --sidebar: #111827;
+      --bg: #f4f7fb; --card: #ffffff; --border: #e5e7eb; --text: #1f2937; --muted: #6b7280;
+      --success: #16a34a; --blue: #2563eb; --orange: #f97316; --green: #059669; --purple: #7c3aed;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .app { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+    .sidebar { background: linear-gradient(180deg, #0f172a 0%, #111827 100%); color: white; padding: 24px 18px; display: flex; flex-direction: column; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .brand-badge { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--primary); font-weight: 800; }
+    .nav-group { display: grid; gap: 8px; }
+    .nav-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 8px 8px 0; }
+    .nav a { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #e5e7eb; padding: 12px 14px; border-radius: 12px; font-size: 14px; transition: 0.2s ease; cursor: pointer; }
+    .nav a:hover, .nav a.active { background: rgba(79, 70, 229, 0.22); color: white; }
+    .main { padding: 24px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .hero h1 { margin: 0; font-size: 30px; color: #111827; }
+    .hero p { margin: 8px 0 0; color: var(--muted); }
+    .userbox { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; background: #e0e7ff; color: var(--primary); display: grid; place-items: center; font-weight: 700; text-transform: uppercase; }
+    .userbox small { color: var(--muted); display: block; margin-top: 2px; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-bottom: 24px; }
+    .stat-card, .panel, .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05); }
+    .stat-card { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .stat-card h3 { margin: 0; font-size: 14px; color: var(--muted); font-weight: 600; }
+    .stat-card .value { margin-top: 10px; font-size: 30px; font-weight: 800; color: #111827; }
+    .icon { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; color: white; font-weight: 800; font-size: 18px; }
+    .icon.green { background: var(--green); } .icon.blue { background: var(--blue); } .icon.orange { background: var(--orange); } .icon.purple { background: var(--purple); }
+    .grid-2 { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 18px; margin-bottom: 18px; }
+    .panel { padding: 20px; }
+    .panel h2, .table-card h2 { margin: 0 0 16px; font-size: 18px; color: #111827; }
+    .quick-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .action-btn { border: none; border-radius: 14px; padding: 14px 12px; color: white; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; justify-content: center; align-items: center; min-height: 52px; text-align: center; transition: 0.2s ease; }
+    .action-btn:hover { transform: translateY(-1px); }
+    .btn-green { background: var(--green); } .btn-blue { background: var(--blue); } .btn-orange { background: var(--orange); } .btn-purple { background: var(--purple); }
+    
+    /* Delete Button Styling */
+    .btn-delete { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
+    .btn-delete:hover { background: var(--danger); color: white; }
+
+    .table-card { padding: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 14px 10px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 700; }
+    .empty-state { text-align: center; padding: 20px; color: var(--muted); font-style: italic; }
+    .tag { padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; display: inline-block; }
+    .tag.Course { background: #ede9fe; color: #6d28d9; } 
+    .tag.CO { background: #dbeafe; color: #1d4ed8; } 
+    .tag.PO { background: #dcfce7; color: #15803d; } 
+    .tag.PSO { background: #ffedd5; color: #c2410c; }
+    @media (max-width: 1100px) { .stats, .quick-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .app { grid-template-columns: 1fr; } .sidebar { position: relative; } .stats, .quick-actions { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-badge">OBE</div>
+        <div>OBE Portal</div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">Main</div>
+        <nav class="nav">
+          <a href="index.html" class="active">Dashboard</a>
+          <a href="details.html">Add Course</a>
+          <a href="CO.html">Add CO</a>
+          <a href="PO.html">Add PO</a>
+        </nav>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">Settings</div>
+        <nav class="nav">
+          <a onclick="logout()">Logout</a>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="hero">
+          <h1>OBE Data Entry Portal</h1>
+          <p>Manage course details, COs, POs, and PSOs from one dashboard.</p>
+        </div>
+        <div class="userbox">
+          <div class="avatar" id="userAvatar">U</div>
+          <div>
+            <strong id="userNameDisplay">User</strong>
+            <small>Faculty</small>
+          </div>
+        </div>
+      </div>
+
+      <section class="stats">
+        <div class="stat-card">
+          <div>
+            <h3>Total POs</h3>
+            <div class="value" id="count-po">0</div>
+          </div>
+          <div class="icon green">PO</div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <h3>Total PSOs</h3>
+            <div class="value" id="count-pso">0</div>
+          </div>
+          <div class="icon blue">PS</div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <h3>Total COs</h3>
+            <div class="value" id="count-co">0</div>
+          </div>
+          <div class="icon orange">CO</div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <h3>Total Courses</h3>
+            <div class="value" id="count-course">0</div>
+          </div>
+          <div class="icon purple">CR</div>
+        </div>
+      </section>
+
+      <section class="grid-2">
+        <div class="panel">
+          <h2>Quick Actions</h2>
+          <div class="quick-actions">
+            <a class="action-btn btn-green" href="PO.html">Add New PO</a>
+            <a class="action-btn btn-blue" href="#">Add New PSO</a>
+            <a class="action-btn btn-orange" href="CO.html">Add New CO</a>
+            <a class="action-btn btn-purple" href="details.html">Add New Course</a>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>System Status</h2>
+          <p style="margin:0;color:var(--muted);font-size:14px;line-height:1.6;">
+            Active User Tracked<br>
+            Dynamic Arrays Active<br>
+            Delete Functions Enabled<br>
+            Data reflects actual input
+          </p>
+        </div>
+      </section>
+
+      <section class="table-card">
+        <h2>Recent Entries</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Title</th>
+              <th>Context</th>
+              <th>Created By</th>
+              <th>Date</th>
+              <th>Actions</th> <!-- Added Actions Column -->
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Data will be injected here by Javascript -->
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // 1. Auth Check
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) window.location.href = "login.html";
+    else {
+      document.getElementById("userNameDisplay").innerText = currentUser;
+      document.getElementById("userAvatar").innerText = currentUser.charAt(0);
+    }
+
+    // 2. Wrap everything in a load function so we can refresh it instantly
+    function loadDashboardData() {
+      // Pull fresh data from local storage
+      let entries = JSON.parse(localStorage.getItem("obe_entries")) || [];
+
+      // Update Stats
+      document.getElementById("count-course").innerText = entries.filter(e => e.type === "Course").length;
+      document.getElementById("count-co").innerText = entries.filter(e => e.type === "CO").length;
+      document.getElementById("count-po").innerText = entries.filter(e => e.type === "PO").length;
+      document.getElementById("count-pso").innerText = entries.filter(e => e.type === "PSO").length;
+
+      // Populate Table
+      const tableBody = document.getElementById("table-body");
+      if (entries.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">No entries found. Start by adding a Course, CO, or PO.</td></tr>`;
+      } else {
+        let html = "";
+        // Reverse array for display, but keep track of the TRUE index so we delete the correct one
+        let reversedEntries = [...entries].reverse();
+        
+        reversedEntries.forEach((entry, index) => {
+          // Calculate what this item's index is in the original array
+          let trueIndex = entries.length - 1 - index;
+          
+          html += `
+            <tr>
+              <td><span class="tag ${entry.type}">${entry.type}</span></td>
+              <td>${entry.title}</td>
+              <td>${entry.context}</td>
+              <td>${entry.author}</td>
+              <td>${entry.date}</td>
+              <td><button class="btn-delete" onclick="deleteEntry(${trueIndex})">Delete</button></td>
+            </tr>
+          `;
+        });
+        tableBody.innerHTML = html;
+      }
+    }
+
+    // 3. Delete Function
+    function deleteEntry(originalIndex) {
+      // Ask user to confirm
+      if (confirm("Are you sure you want to delete this entry?")) {
+        // Fetch array, remove the specific item, resave, and reload UI
+        let entries = JSON.parse(localStorage.getItem("obe_entries")) || [];
+        entries.splice(originalIndex, 1);
+        localStorage.setItem("obe_entries", JSON.stringify(entries));
+        
+        loadDashboardData(); // Instantly update the page
+      }
+    }
+
+    // 4. Run the loader immediately when the page loads
+    loadDashboardData();
+
+    // 5. Logout
+    function logout() {
+      localStorage.removeItem("currentUser");
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
