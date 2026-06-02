@@ -21,7 +21,7 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState } = React;
+const { useState, useEffect } = React;
 
 const PROGRAMS = [
   { id:'cs', name:'B.Tech – Computer Science',       code:'CS', dept:'Computer Engineering' },
@@ -115,12 +115,40 @@ function TopBar({ title }) {
   );
 }
 
+function loadPsos() {
+  try {
+    const entries = JSON.parse(localStorage.getItem('obe_entries') || '[]');
+    const storedPsos = JSON.parse(localStorage.getItem('obe_psos') || '[]');
+    return entries
+      .filter(e => e.type === 'PSO')
+      .map(entry => {
+        const matched = storedPsos.find(pso => pso.title === entry.title && pso.program === entry.context && pso.date === entry.date);
+        return {
+          id: matched?.id || entry.id || Date.now(),
+          code: matched?.code || entry.code || entry.psoCode || 'PSO',
+          title: entry.title || '',
+          description: entry.description || matched?.description || '',
+          bloom: entry.bloom || matched?.bloom || '',
+          program: entry.context || entry.program || '',
+          date: entry.date || '',
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
+function syncPsosFromEntries() {
+  const psosData = loadPsos();
+  localStorage.setItem('obe_psos', JSON.stringify(psosData));
+  return psosData;
+}
+
 function App() {
-  const loadPsos = () => { try { return JSON.parse(localStorage.getItem('obe_psos') || '[]'); } catch { return []; } };
   const [step, setStep]     = useState(0);
   const [form, setForm]     = useState({program:'',psoCode:'',title:'',description:'',bloom:''});
   const [errors, setErrors] = useState({});
-  const [psos, setPsosState] = useState(loadPsos);
+  const [psos, setPsosState] = useState(syncPsosFromEntries);
   const [saved, setSaved]   = useState(false);
 
   function upd(k, v) {
@@ -153,27 +181,24 @@ function App() {
       date: `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`,
     };
     const updated = [...psos, newPso];
-setPsosState(updated);
+    setPsosState(updated);
+    localStorage.setItem('obe_psos', JSON.stringify(updated));
 
-localStorage.setItem('obe_psos', JSON.stringify(updated));
+    let dashboardEntries = JSON.parse(localStorage.getItem('obe_entries')) || [];
+    dashboardEntries.push({
+      type: 'PSO',
+      title: newPso.title,
+      context: newPso.program,
+      code: newPso.code,
+      description: newPso.description,
+      bloom: newPso.bloom,
+      author: localStorage.getItem('currentUser') || 'Faculty',
+      date: newPso.date,
+      id: newPso.id,
+    });
+    localStorage.setItem('obe_entries', JSON.stringify(dashboardEntries));
 
-let dashboardEntries =
-  JSON.parse(localStorage.getItem("obe_entries")) || [];
-
-dashboardEntries.push({
-  type: "PSO",
-  title: newPso.title,
-  context: newPso.program,
-  author: localStorage.getItem("currentUser") || "Faculty",
-  date: newPso.date
-});
-
-localStorage.setItem(
-  "obe_entries",
-  JSON.stringify(dashboardEntries)
-);
-
-setSaved(true);
+    setSaved(true);
     setTimeout(() => {
       setSaved(false); setStep(0);
       setForm({program:'',psoCode:'',title:'',description:'',bloom:''});
@@ -183,6 +208,12 @@ setSaved(true);
   const prog = PROGRAMS.find(p => p.id === form.program);
   const fCls = k => cc('w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 transition',
     errors[k] ? 'border-red-400 bg-red-50' : 'border-gray-200');
+
+  useEffect(() => {
+    const handler = () => setPsosState(syncPsosFromEntries());
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
 
   return (
     <div className="flex min-h-screen">
